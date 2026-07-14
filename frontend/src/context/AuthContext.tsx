@@ -3,7 +3,14 @@ import axios from 'axios';
 
 // Helper to mimic fetch behavior using Axios
 async function axiosFetch(url: RequestInfo | URL, options: RequestInit = {}): Promise<Response> {
-  const urlString = typeof url === 'string' ? url : (url as any).url || url.toString();
+  let urlString = typeof url === 'string' ? url : (url as any).url || url.toString();
+
+  const apiUrl = import.meta.env.VITE_API_URL || '';
+  if (apiUrl && urlString.startsWith('/')) {
+    // If it doesn't end with slash and urlString doesn't start with slash, handle it (urlString starts with '/' is verified)
+    const normalizedApiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+    urlString = `${normalizedApiUrl}${urlString}`;
+  }
 
   const headers: Record<string, string> = {};
   if (options.headers) {
