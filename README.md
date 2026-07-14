@@ -170,5 +170,3 @@ JWT_SECRET=fallbackSecretKeyForDev
 **Mahalakshmi P**  
 *Associate Software Engineer*  
 
-- **GitHub**: [github.com/yourusername](https://github.com/yourusername)  
-- **LinkedIn**: [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)  
