@@ -133,10 +133,36 @@
   color: #64748b !important;
 }
 
-/* High contrast teal text & badges in Light Mode */
+/* High contrast teal, amber & rose text and badges in Light Mode */
 .light-theme .text-teal-400,
 .light-theme .text-teal-300 {
   color: #0f766e !important;
+}
+
+.light-theme .text-amber-400,
+.light-theme .text-amber-300 {
+  color: #b45309 !important;
+}
+
+.light-theme .text-rose-400,
+.light-theme .text-rose-300 {
+  color: #e11d48 !important;
+}
+
+.light-theme .bg-amber-500\/20,
+.light-theme .bg-amber-500\/10 {
+  background-color: #fef3c7 !important;
+  color: #78350f !important;
+  border-color: #fde68a !important;
+  font-weight: 700 !important;
+}
+
+.light-theme .bg-rose-500\/20,
+.light-theme .bg-rose-500\/10 {
+  background-color: #ffe4e6 !important;
+  color: #9f1239 !important;
+  border-color: #fecdd3 !important;
+  font-weight: 700 !important;
 }
 
 /* Banner Gradients in Light Mode */
@@ -145,7 +171,7 @@
   border-color: #e2e8f0 !important;
 }
 
-/* Overdue & Due Today Banner Overrides */
+/* Overdue & Due Today Banner Overrides in Light Mode */
 .light-theme .bg-rose-950\/20 {
   background-color: #fff1f2 !important;
   border-color: #fecdd3 !important;

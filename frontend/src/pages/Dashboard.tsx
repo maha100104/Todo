@@ -193,9 +193,17 @@ export const Dashboard: React.FC = () => {
             <p className="text-xs sm:text-sm text-slate-400 mt-1 font-medium flex items-center gap-1.5">
               <span className="inline-block w-2 h-2 rounded-full bg-teal-400 animate-pulse shrink-0"></span>
               <span>
-                {overdueTasks.length > 0 || dueTodayTasks.length > 0 ? (
+                {overdueTasks.length > 0 && dueTodayTasks.length > 0 ? (
                   <>
                     You have <span className="font-bold text-rose-400">{overdueTasks.length} overdue task{overdueTasks.length === 1 ? '' : 's'}</span> and <span className="font-bold text-amber-400">{dueTodayTasks.length} task{dueTodayTasks.length === 1 ? '' : 's'} due today</span>.
+                  </>
+                ) : overdueTasks.length > 0 ? (
+                  <>
+                    You have <span className="font-bold text-rose-400">{overdueTasks.length} overdue task{overdueTasks.length === 1 ? '' : 's'}</span>.
+                  </>
+                ) : dueTodayTasks.length > 0 ? (
+                  <>
+                    You have <span className="font-bold text-amber-400">{dueTodayTasks.length} task{dueTodayTasks.length === 1 ? '' : 's'} due today</span>.
                   </>
                 ) : (
                   <>You have no overdue tasks and no tasks due today. All caught up!</>
@@ -216,7 +224,7 @@ export const Dashboard: React.FC = () => {
         {/* Global Task Statistics Cards */}
         <TodoStats todos={allTodos} />
 
-        {/* 🔴 Overdue Tasks Section */}
+        {/* 🔴 Overdue Tasks Section - Only shown when count >= 1 */}
         {overdueTasks.length > 0 && (
           <div className="bg-rose-950/20 border border-rose-500/30 rounded-3xl p-6 mb-8 backdrop-blur-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
@@ -265,7 +273,7 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* 📅 Due Today Section */}
+        {/* 📅 Due Today Section - Only shown when count >= 1 */}
         {dueTodayTasks.length > 0 && (
           <div className="bg-amber-950/20 border border-amber-500/30 rounded-3xl p-6 mb-8 backdrop-blur-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
@@ -294,7 +302,7 @@ export const Dashboard: React.FC = () => {
                     <p className="text-sm font-bold text-slate-100 flex items-center gap-1.5 truncate group-hover:text-amber-300 transition-colors">
                       📌 {t.title}
                     </p>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-block mt-1">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 inline-block mt-1 shadow-sm">
                       Due Today
                     </span>
                   </div>
