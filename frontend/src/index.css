@@ -31,7 +31,7 @@
 
 /* ── Light Theme Design Overrides ─────────────────────────────────────────── */
 .light-theme {
-  --bg-app: #f8fafc;
+  --bg-app: #e2e8f0;
   --bg-card: #ffffff;
   --bg-sidebar: #f1f5f9;
 
@@ -40,17 +40,17 @@
   --text-light: #475569;
   --text-heading: #0f172a;
 
-  --border-color: #e2e8f0;
+  --border-color: #cbd5e1;
   --border-sidebar: #cbd5e1;
 
   color-scheme: light;
 }
 
-/* Force body and root background in light mode */
+/* Distinct neutral body background in light mode to intentionally frame the app */
 .light-theme body,
 .light-theme #root,
 .light-theme .min-h-screen {
-  background-color: #f8fafc !important;
+  background-color: #e2e8f0 !important;
   color: #1e293b !important;
 }
 
@@ -58,8 +58,9 @@
 .light-theme header,
 .light-theme .bg-\[\#0f172a\]\/90 {
   background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
   color: #0f172a !important;
+  box-shadow: 0 4px 15px -2px rgba(0, 0, 0, 0.05) !important;
 }
 
 .light-theme header span,
@@ -85,7 +86,7 @@
 .light-theme .fixed.inset-0.bg-slate-950\/70,
 .light-theme .fixed.inset-0.bg-slate-950\/60,
 .light-theme .fixed.inset-0 {
-  background-color: rgba(15, 23, 42, 0.4) !important;
+  background-color: rgba(15, 23, 42, 0.45) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
 }
@@ -100,8 +101,8 @@
 .light-theme .bg-slate-950\/60,
 .light-theme .bg-slate-950\/80 {
   background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04) !important;
 }
 
 .light-theme .bg-slate-800,
@@ -177,8 +178,8 @@
 
 /* Banner Gradients in Light Mode */
 .light-theme .bg-gradient-to-r.from-slate-900 {
-  background: linear-gradient(to right, #f1f5f9, #ffffff, #f1f5f9) !important;
-  border-color: #e2e8f0 !important;
+  background: linear-gradient(to right, #ffffff, #f8fafc, #ffffff) !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* Overdue & Due Today Banner Overrides in Light Mode */

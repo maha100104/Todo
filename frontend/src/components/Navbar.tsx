@@ -40,11 +40,10 @@ export const Navbar: React.FC = () => {
             <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
               <Link
                 to="/profile"
-                className={`flex items-center space-x-1.5 sm:space-x-2.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold border transition-all ${
-                  location.pathname === '/profile'
+                className={`flex items-center space-x-1.5 sm:space-x-2.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold border transition-all ${location.pathname === '/profile'
                     ? 'bg-teal-500/20 text-slate-950 dark:text-teal-300 border-teal-500/40 shadow-sm'
                     : 'bg-slate-800/60 border-slate-700/60 text-slate-900 dark:text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
+                  }`}
               >
                 <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-500/20 text-slate-950 dark:text-teal-400 flex items-center justify-center font-extrabold text-[10px] sm:text-xs border border-teal-500/40 shrink-0">
                   {user.name.charAt(0).toUpperCase()}

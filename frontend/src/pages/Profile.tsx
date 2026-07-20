@@ -136,9 +136,9 @@ export const Profile: React.FC = () => {
 
   const memberSinceFormatted = profileData?.createdAt
     ? new Date(profileData.createdAt).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
+      month: 'long',
+      year: 'numeric',
+    })
     : 'July 2026';
 
   if (loading) {
@@ -263,11 +263,10 @@ export const Profile: React.FC = () => {
                 setTheme('dark');
                 toast.success('Dark theme activated');
               }}
-              className={`p-5 rounded-2xl border flex items-center gap-4 transition-all text-left ${
-                theme === 'dark'
+              className={`p-5 rounded-2xl border flex items-center gap-4 transition-all text-left ${theme === 'dark'
                   ? 'bg-teal-500/10 border-teal-500 text-teal-300 ring-2 ring-teal-500/20'
                   : 'bg-slate-800/40 border-slate-700/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-              }`}
+                }`}
             >
               <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-teal-400 shrink-0">
                 <FiMoon className="w-6 h-6" />
@@ -284,11 +283,10 @@ export const Profile: React.FC = () => {
                 setTheme('light');
                 toast.success('Light theme activated');
               }}
-              className={`p-5 rounded-2xl border flex items-center gap-4 transition-all text-left ${
-                theme === 'light'
+              className={`p-5 rounded-2xl border flex items-center gap-4 transition-all text-left ${theme === 'light'
                   ? 'bg-teal-500/10 border-teal-500 text-teal-300 ring-2 ring-teal-500/20'
                   : 'bg-slate-800/40 border-slate-700/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-              }`}
+                }`}
             >
               <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-300 flex items-center justify-center text-amber-500 shrink-0">
                 <FiSun className="w-6 h-6" />
