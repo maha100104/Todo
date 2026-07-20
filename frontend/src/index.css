@@ -110,8 +110,9 @@
 .light-theme .bg-slate-800\/50,
 .light-theme .bg-slate-800\/60,
 .light-theme .bg-slate-800\/80 {
-  background-color: #f1f5f9 !important;
+  background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 15px -2px rgba(0, 0, 0, 0.06) !important;
 }
 
 /* Inputs, Textareas, Selects in Light Mode */
@@ -120,6 +121,20 @@
 .light-theme textarea {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Clean Light Theme Hover State Overrides */
+.light-theme .hover\:bg-slate-800:hover,
+.light-theme .hover\:bg-slate-700:hover,
+.light-theme .hover\:bg-slate-900:hover,
+.light-theme .hover\:bg-slate-700\/80:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.light-theme .hover\:text-slate-200:hover,
+.light-theme .hover\:text-white:hover {
   color: #0f172a !important;
 }
 
@@ -195,7 +210,10 @@
 
 /* ── Base styles inside @layer base so they override Tailwind Preflight ───── */
 @layer base {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
   }
 
@@ -219,7 +237,9 @@
     background-color: var(--bg-app);
   }
 
-  input, textarea, select {
+  input,
+  textarea,
+  select {
     font-family: inherit;
   }
 }
@@ -229,13 +249,16 @@
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
