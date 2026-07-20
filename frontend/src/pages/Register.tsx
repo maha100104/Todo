@@ -27,19 +27,20 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-slate-100">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center p-3 bg-gradient-to-tr from-teal-500 to-indigo-600 rounded-2xl shadow-xl shadow-teal-500/20 mb-4">
-          <FiCheckSquare className="w-8 h-8 text-white" />
-        </div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-white">Create an account</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Get started with TaskFlow to supercharge your productivity
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#090d16] flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 text-slate-100">
+      <div className="w-full max-w-md">
+        <div className="bg-slate-900/80 border border-slate-800 py-8 px-6 sm:px-10 shadow-2xl rounded-3xl backdrop-blur-xl space-y-6">
+          {/* Unified Header Inside Card */}
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center p-3 bg-gradient-to-tr from-teal-500 to-indigo-600 rounded-2xl shadow-xl shadow-teal-500/20 mb-3">
+              <FiCheckSquare className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Create an account</h2>
+            <p className="mt-2 text-xs sm:text-sm text-slate-400">
+              Get started with TaskFlow to supercharge your productivity
+            </p>
+          </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-slate-900/80 border border-slate-800 py-8 px-4 shadow-2xl rounded-2xl sm:px-10 backdrop-blur-xl">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
@@ -118,7 +119,7 @@ export const Register: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="pt-2 text-center">
             <p className="text-sm text-slate-400">
               Already have an account?{' '}
               <Link to="/login" className="font-semibold text-teal-400 hover:text-teal-300 transition-colors">
