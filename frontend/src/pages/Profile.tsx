@@ -453,7 +453,7 @@ export const Profile: React.FC = () => {
                 <button
                   type="submit"
                   disabled={updatingPassword}
-                  className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-teal-400 hover:text-teal-300 border border-teal-500/30 font-bold text-sm rounded-xl transition-all disabled:opacity-50"
+                  className="w-full py-2.5 px-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-teal-500/20 transition-all disabled:opacity-50"
                 >
                   {updatingPassword ? 'Updating Password...' : 'Change Password'}
                 </button>
