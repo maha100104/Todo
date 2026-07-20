@@ -80,6 +80,16 @@
   color: #090d16 !important;
 }
 
+/* Modal backdrop overlays retain translucent glassmorphism blur without solid white fill */
+.light-theme .fixed.inset-0.bg-slate-950\/80,
+.light-theme .fixed.inset-0.bg-slate-950\/70,
+.light-theme .fixed.inset-0.bg-slate-950\/60,
+.light-theme .fixed.inset-0 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
 /* Cards, Modals & Container Boxes in Light Mode */
 .light-theme .bg-slate-900,
 .light-theme .bg-slate-900\/40,
@@ -91,7 +101,7 @@
 .light-theme .bg-slate-950\/80 {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1) !important;
 }
 
 .light-theme .bg-slate-800,
