@@ -38,15 +38,21 @@ function loadEnv() {
 
 loadEnv();
 
-const isTiDB = (process.env.DB_HOST || "").includes("tidbcloud.com");
+const host = process.env.DB_HOST || "gateway01.ap-southeast-1.prod.aws.tidbcloud.com";
+const port = Number(process.env.DB_PORT) || 4000;
+const user = process.env.DB_USER || process.env.DB_USERNAME || "4CtC8eCaW5a8oJx.root";
+const password = process.env.DB_PASSWORD || "0jhpujOpepBfnFTQ";
+const database = process.env.DB_NAME || process.env.DB_DATABASE || "todo_db";
+
+const isTiDB = host.includes("tidbcloud.com");
 
 const connection = mysql.createPool({
-    host: process.env.DB_HOST || "localhost",
-    port: Number(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || process.env.DB_USERNAME || "jwt_user",
-    password: process.env.DB_PASSWORD || "Maha@123",
-    database: process.env.DB_NAME || process.env.DB_DATABASE || "todo_db",
-    ssl: isTiDB ? { minVersion: "TLSv1.2", rejectUnauthorized: true } : undefined,
+    host,
+    port,
+    user,
+    password,
+    database,
+    ssl: isTiDB ? { rejectUnauthorized: true } : undefined,
 });
 
 export const db = drizzle(connection);
