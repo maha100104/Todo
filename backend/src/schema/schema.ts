@@ -1,4 +1,4 @@
-import { mysqlTable, serial, varchar, text, timestamp, mysqlEnum, boolean } from "drizzle-orm/mysql-core";
+import { mysqlTable, serial, bigint, varchar, text, timestamp, mysqlEnum, boolean } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: serial("id").primaryKey(),
@@ -12,7 +12,7 @@ export const users = mysqlTable("users", {
 
 export const todos = mysqlTable("todos", {
   id: serial("id").primaryKey(),
-  userId: serial("user_id").references(() => users.id, { onDelete: "cascade" }),
+  userId: bigint("user_id", { mode: "number", unsigned: true }).notNull().references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   status: mysqlEnum("status", ["pending", "in_progress", "completed"]).default("pending").notNull(),

@@ -38,11 +38,15 @@ function loadEnv() {
 
 loadEnv();
 
+const isTiDB = (process.env.DB_HOST || "").includes("tidbcloud.com");
+
 const connection = mysql.createPool({
-    host:process.env.DB_HOST,
-    port:Number(process.env.DB_PORT),
-    user:process.env.DB_USER,
-    password:process.env.DB_PASSWORD,
-    database:process.env.DB_NAME,
-})
+    host: process.env.DB_HOST || "localhost",
+    port: Number(process.env.DB_PORT) || 3306,
+    user: process.env.DB_USER || process.env.DB_USERNAME || "jwt_user",
+    password: process.env.DB_PASSWORD || "Maha@123",
+    database: process.env.DB_NAME || process.env.DB_DATABASE || "todo_db",
+    ssl: isTiDB ? { minVersion: "TLSv1.2", rejectUnauthorized: true } : undefined,
+});
+
 export const db = drizzle(connection);

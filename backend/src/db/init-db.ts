@@ -37,16 +37,18 @@ function loadEnv() {
 loadEnv();
 
 async function initDb() {
+  const isTiDB = (process.env.DB_HOST || "").includes("tidbcloud.com");
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || "jwt_user",
+    user: process.env.DB_USER || process.env.DB_USERNAME || "jwt_user",
     password: process.env.DB_PASSWORD || "Maha@123",
+    ssl: isTiDB ? { minVersion: "TLSv1.2", rejectUnauthorized: true } : undefined,
   });
 
-  const dbName = process.env.DB_NAME || "todo_db";
+  const dbName = process.env.DB_NAME || process.env.DB_DATABASE || "todo_db";
 
-  console.log(`Connecting to MySQL and ensuring database '${dbName}' exists...`);
+  console.log(`Connecting to MySQL/TiDB and ensuring database '${dbName}' exists...`);
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
   await connection.query(`USE \`${dbName}\`;`);
 
@@ -56,7 +58,7 @@ async function initDb() {
   
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`users\` (
-      \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+      \`id\` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       \`name\` VARCHAR(255) NOT NULL,
       \`email\` VARCHAR(255) NOT NULL UNIQUE,
       \`password\` TEXT NOT NULL,
@@ -68,8 +70,8 @@ async function initDb() {
 
   await connection.query(`
     CREATE TABLE IF NOT EXISTS \`todos\` (
-      \`id\` INT AUTO_INCREMENT PRIMARY KEY,
-      \`user_id\` INT NOT NULL,
+      \`id\` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      \`user_id\` BIGINT UNSIGNED NOT NULL,
       \`title\` VARCHAR(255) NOT NULL,
       \`description\` TEXT,
       \`status\` ENUM('pending', 'in_progress', 'completed') NOT NULL DEFAULT 'pending',
@@ -89,7 +91,7 @@ async function initDb() {
 
   await connection.query(`SET FOREIGN_KEY_CHECKS = 1;`);
 
-  console.log(`✅ Dedicated database '${dbName}' updated with is_active column successfully!`);
+  console.log(`✅ Dedicated database '${dbName}' initialized and synchronized successfully!`);
   await connection.end();
 }
 
