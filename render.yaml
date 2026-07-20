@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: todo-backend
+    env: node
+    rootDir: backend
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm build
+    startCommand: node dist/src/main.js
+    envVars:
+      - key: PORT
+        value: 3000
