@@ -1,172 +1,170 @@
-# 🛒 E-Commerce Full Stack Application
+# 🚀 TaskFlow - Modern Full-Stack Todo & Productivity Dashboard
 
-A modern, responsive Full Stack E-Commerce application built with **React, TypeScript, NestJS, Drizzle ORM, MySQL, and JWT Authentication**.
-
-The application provides a complete shopping experience with role-based access control, product management, cart, wishlist, orders, profile management, and an admin dashboard.
+TaskFlow is a high-performance, full-stack productivity web application built with **React + Vite**, **NestJS**, **Drizzle ORM**, and **MySQL**. It features an elegant UI with seamless Dark & Light theme switching, soft-deletion, real-time activity tracking, and comprehensive task analytics.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-### 🔐 Authentication & Authorization
-- **User Registration & Login** with secure authentication.
-- **JWT Authorization** with automated Token Refresh:
-  - Access Token expires in **1 hour**.
-  - Refresh Token expires in **7 days**.
-- **Axios-Powered HTTP Pipeline** with custom Fetch-interface proxying.
-- **Role-Based Access Control** (Admin / User roles).
-- **Protected Routes & Guards** on both frontend and backend.
-- **403 Unauthorized** access fallback page.
-- **Secure Password Hashing** (bcrypt) & Password edit with old password validation.
-
----
-
-### 👤 User Features
-- **Product Catalog** with dynamic categories, pricing, ratings, and pagination.
-- **Star Ratings System** with interactive filled yellow-colored stars.
-- **E-Commerce Cart** with increment, decrement, total sum calculations, checkout, and simulated payment.
-- **Wishlist** for pinning favorite items.
-- **Order Flow**: Place orders, track history, view real-time status trackers.
-- **Saved Address Profiles**: Add, edit, delete, and designate default billing/shipping address.
-- **User Profiles**: Custom name, email, credentials, and password manager.
+- **🔐 Authentication & User Security**:
+  - JWT-based authentication with secure password hashing (`bcrypt`).
+  - Interactive password visibility toggles (`FiEye` / `FiEyeOff`) on Login, Register, and Profile pages.
+  - Logout confirmation modal to prevent accidental session termination.
+- **🌓 Dark & Light Theme System**:
+  - Persistent theme system backed by `ThemeContext` and `localStorage`.
+  - Custom-tuned high-contrast Light Theme with dark slate typography and vibrant teal accents.
+- **🗑️ Soft Delete Architecture**:
+  - Tasks are safely preserved in the database using an `is_active` (`BOOLEAN`) flag.
+  - Deleting a task triggers a confirmation modal, setting `is_active = false` without losing historical data.
+- **📊 Interactive Dashboard & Task Management**:
+  - **Dynamic Welcome Banner**: Displays live counts of overdue tasks and tasks due today.
+  - **Progress Analytics**: Completion progress bar featuring percent and numeric ratios (e.g., `29% Completed (2/7)`).
+  - **Overdue & Due Today Banners**: Intelligent card display restricted to 3 cards initially with an expandable "View All" toggle.
+  - Full CRUD operations with priority levels (`high`, `medium`, `low`), categories (`work`, `personal`, `study`), and due dates.
+- **📱 Fully Responsive Design**:
+  - Carefully crafted layout with mobile-first responsiveness down to 320px screen width.
 
 ---
 
-### ⭐ Product Reviews
-- **Write Reviews**: Enabled for customers once their order status is changed to **Delivered**.
-- **Interactive Stars**: Yellow star-based rating interface with a textarea field.
-- **Review CRUD**: Users can add, edit, or delete their review comments.
-- **Public Visibility**: Reviews are stored in the database and visible to all visiting users on the product details page.
+## 🛠️ Technology Stack
 
----
-
-### 🛠 Admin Features
-- **Manage Products**: Add, edit, delete, and toggle activation status of catalog products.
-- **Manage Users**:
-  - Live table listing all registered users, email ids, registered dates, last used/login dates, and total orders placed.
-  - Newly created users are automatically listed at the top.
-  - Dynamic **database-level search**, role filtering, and sorting options.
-- **Manage Orders**: View and update order statuses globally.
-
----
-
-## 💻 Tech Stack
-
-### Frontend
-- **Framework**: React (Vite)
+### **Frontend**
+- **Framework**: React 19 + Vite
 - **Language**: TypeScript
-- **HTTP Client**: Axios (monkey-patched globally as transparent `window.fetch` adapter)
-- **State Management**: Context API
-- **Styling**: Vanilla CSS & Tailwind CSS
-- **Routing**: React Router DOM
+- **Styling**: Tailwind CSS v4 + Vanilla CSS Variables
+- **Routing**: React Router v7
+- **Icons**: React Icons (`react-icons/fi`)
+- **Notifications**: React Hot Toast
 
-### Backend
+### **Backend**
 - **Framework**: NestJS
-- **Language**: TypeScript
-- **Database ORM**: Drizzle ORM
-- **Authentication**: JWT, passport-jwt
-- **Hashing**: bcrypt
-
-### Database
-- **Engine**: MySQL
+- **Database**: MySQL
+- **ORM**: Drizzle ORM
+- **Authentication**: Passport-JWT, Bcrypt
+- **Validation**: Class-Validator & Class-Transformer
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
-### Frontend
 ```text
-src/
-├── assets/         # CSS styles and theme declarations
-├── components/     # Reusable layout and navigation components (StoreLayout, etc.)
-├── context/        # Global states (AuthContext, StoreContext)
-├── pages/          # Application views (Login, Profile, Orders, AdminProducts, AdminUsers, etc.)
-├── utils/          # Global helper tools (Toast alerts, etc.)
-├── App.tsx         # Main route manager
-└── main.tsx        # Render mount point
-```
-
-### Backend
-```text
-src/
-├── auth/           # Login, registration, token refresh, profiles, and password handlers
-├── cart/           # Shopping cart operations
-├── orders/         # Ordering lifecycle and checkout handler
-├── products/       # Products catalog CRUD operations
-├── reviews/        # Review submissions and product comments
-├── wishlist/       # Favorite lists
-├── db/             # Drizzle instance initializer
-├── schema/         # Drizzle schema definitions (user, products, orders, cart, etc.)
-├── guard/          # Auth and role security guards
-└── main.ts         # NestJS boostrapper
-```
-
----
-
-## 🔒 Authentication Flow
-1. User registers or logs in; credentials are encrypted/verified via bcrypt.
-2. A short-lived **Access Token (1 hr)** and a long-lived **Refresh Token (7 days)** are returned.
-3. Access tokens are automatically appended as `Bearer` headers on protected requests.
-4. If a request returns a `401 Unauthorized` response, the Axios wrapper intercepts the request, hits the `/auth/refresh` endpoint to acquire new credentials, and retries the original request seamlessly.
-
----
-
-## 🗄 Database Modules
-- **Users**: Admin/user credentials.
-- **Logins**: Logs user login timestamp for auditing/last used tracking.
-- **Products**: Detailed descriptions, pricing, active status, images.
-- **Wishlist**: Saved catalog indices.
-- **Cart**: Active shopping sessions.
-- **Orders & Order Items**: Purchased records and line items.
-- **Addresses**: Multi-address entries per customer profile.
-- **Reviews**: Product rating indices and comments.
-
----
-
-## 🚀 Installation
-
-### Clone Repository
-```bash
-git clone https://github.com/yourusername/ecommerce-fullstack.git
-cd ecommerce-fullstack
+FullStackProject TODO/
+├── backend/                  # NestJS Backend API
+│   ├── src/
+│   │   ├── auth/            # Auth module (JWT, Login, Register, Profile)
+│   │   ├── db/              # Database initialization & Drizzle connection
+│   │   ├── schema/          # Database table schemas (users, todos)
+│   │   ├── todos/           # Todos module (Service, Controller, DTOs)
+│   │   ├── app.module.ts
+│   │   └── main.ts
+│   ├── .env.example
+│   └── package.json
+│
+├── frontend/                 # React + Vite Frontend App
+│   ├── src/
+│   │   ├── components/      # UI components (Navbar, TodoCard, Modals, Stats)
+│   │   ├── context/         # AuthContext & ThemeContext
+│   │   ├── pages/           # Dashboard, Login, Register, Profile
+│   │   ├── services/        # Axios API instance
+│   │   ├── types/           # TypeScript interfaces
+│   │   ├── App.tsx
+│   │   └── index.css        # CSS variables & Light/Dark Theme overrides
+│   ├── index.html
+│   └── package.json
+│
+├── package.json              # Monorepo root package.json
+└── pnpm-workspace.yaml       # pnpm workspace configuration
 ```
 
 ---
 
-### Frontend Setup
-```bash
-cd frontend
-pnpm install
-pnpm run dev
-```
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- **Node.js**: `v18.x` or higher
+- **Package Manager**: `pnpm` (or `npm` / `yarn`)
+- **Database**: `MySQL Server`
 
 ---
 
-### Backend Setup
-```bash
-cd backend
-pnpm install
-pnpm run start:dev
-```
+### 2. Backend Setup
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+
+2. Create a `.env` file based on `.env.example`:
+   ```env
+   PORT=3000
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=your_mysql_password
+   DB_NAME=todo_db
+   JWT_SECRET=super_secret_jwt_key
+   ```
+
+3. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+
+4. Initialize database schema:
+   ```bash
+   pnpm run db:init
+   ```
+
+5. Start the backend development server:
+   ```bash
+   pnpm run start:dev
+   ```
+   The backend server will start at `http://localhost:3000`.
 
 ---
 
-## ⚙ Environment Variables
+### 3. Frontend Setup
 
-Backend `.env`
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=jwt_user
-DB_PASSWORD=Maha@123
-DB_NAME=jwt_auth
-JWT_SECRET=fallbackSecretKeyForDev
-```
+1. Open a new terminal and navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+
+3. Start the frontend development server:
+   ```bash
+   pnpm run dev
+   ```
+   The frontend application will start at `http://localhost:5173`.
 
 ---
 
-## 👨‍💻 Author
+## 📡 API Endpoints Summary
 
-**Mahalakshmi P**  
-*Associate Software Engineer*  
+### **Authentication (`/auth`)**
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/auth/register` | Register a new user |
+| `POST` | `/auth/login` | Login user & return JWT token |
+| `GET` | `/auth/profile` | Get current user profile & account stats |
+| `PATCH` | `/auth/profile` | Update profile information |
+| `PATCH` | `/auth/change-password` | Change user password |
 
+### **Todos (`/todos`)**
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/todos` | Get active todos (supports search & filters) |
+| `POST` | `/todos` | Create a new todo (`isActive = true`) |
+| `GET` | `/todos/:id` | Get specific todo by ID |
+| `PATCH` | `/todos/:id` | Update todo details or status |
+| `DELETE` | `/todos/:id` | Soft-delete todo (`is_active = false`) |
+
+---
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
