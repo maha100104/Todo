@@ -1,28 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
-import { FiCheckSquare, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiCheckSquare, FiUser, FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi';
 
-export const Login: React.FC = () => {
+export const Register: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await api.post('/auth/login', { email, password });
-      toast.success(response.data.message || 'Login successful');
-      login(response.data.accessToken, response.data.user);
-      navigate('/');
+      const response = await api.post('/auth/register', { name, email, password });
+      toast.success(response.data.message || 'Registration successful! Please login.');
+      navigate('/login');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Login failed. Check your credentials.');
+      toast.error(err.response?.data?.message || 'Registration failed. Try again.');
     } finally {
       setLoading(false);
     }
@@ -34,15 +32,34 @@ export const Login: React.FC = () => {
         <div className="inline-flex items-center justify-center p-3 bg-gradient-to-tr from-teal-500 to-indigo-600 rounded-2xl shadow-xl shadow-teal-500/20 mb-4">
           <FiCheckSquare className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-white">Welcome back</h2>
+        <h2 className="text-3xl font-extrabold tracking-tight text-white">Create an account</h2>
         <p className="mt-2 text-sm text-slate-400">
-          Sign in to your TaskFlow account to manage your todos
+          Get started with TaskFlow to supercharge your productivity
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-slate-900/80 border border-slate-800 py-8 px-4 shadow-2xl rounded-2xl sm:px-10 backdrop-blur-xl">
           <form className="space-y-5" onSubmit={handleSubmit}>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                Full Name
+              </label>
+              <div className="relative rounded-xl shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <FiUser className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm placeholder-slate-500 text-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all"
+                  placeholder="John Doe"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                 Email Address
@@ -76,7 +93,7 @@ export const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm placeholder-slate-500 text-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all"
-                  placeholder="••••••••"
+                  placeholder="At least 6 characters"
                 />
                 <button
                   type="button"
@@ -95,7 +112,7 @@ export const Login: React.FC = () => {
                 disabled={loading}
                 className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-sm font-bold text-slate-950 bg-teal-400 hover:bg-teal-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shadow-lg shadow-teal-500/20 transition-all disabled:opacity-50"
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Creating account...' : 'Create Account'}
                 <FiArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -103,9 +120,9 @@ export const Login: React.FC = () => {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-400">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-semibold text-teal-400 hover:text-teal-300 transition-colors">
-                Sign up
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-teal-400 hover:text-teal-300 transition-colors">
+                Sign in
               </Link>
             </p>
           </div>

@@ -1,425 +1,444 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
+import type { Todo, CreateTodoInput, UpdateTodoInput, TodoStatus } from '../types/todo';
+import { Navbar } from '../components/Navbar';
+import { TodoStats } from '../components/TodoStats';
+import { TodoCard } from '../components/TodoCard';
+import { TodoModal } from '../components/TodoModal';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { useAuth } from '../context/AuthContext';
-import { useStore } from '../context/StoreContext';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { StoreLayout } from '../components/StoreLayout';
-import { FaFilter } from 'react-icons/fa';
+import toast from 'react-hot-toast';
+import { FiPlus, FiSearch, FiFilter, FiInbox, FiTag, FiClock, FiAlertTriangle } from 'react-icons/fi';
 
-export const DashboardPage: React.FC = () => {
-  const { user, loading, fetchWithAuth } = useAuth();
-  const { addToCart, toggleWishlist, isInWishlist } = useStore();
-  const navigate = useNavigate();
-  const [products, setProducts] = useState<any[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [productError, setProductError] = useState<string | null>(null);
-  const [searchInputValue, setSearchInputValue] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [priceRange, setPriceRange] = useState(100000);
-  const [tempCategory, setTempCategory] = useState('all');
-  const [tempPriceRange, setTempPriceRange] = useState(100000);
+export const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [allTodos, setAllTodos] = useState<Todo[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Debounce search input and reset pagination when search input changes
+  const [showAllOverdue, setShowAllOverdue] = useState(false);
+  const [showAllDueToday, setShowAllDueToday] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+
+  // Delete confirmation modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingTodo, setDeletingTodo] = useState<Todo | null>(null);
+  const [deletingLoading, setDeletingLoading] = useState(false);
+
+  // Debounce search query by 400ms to reduce backend database requests while typing
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearchQuery(searchInputValue);
-      setPage(1);
-      setPageCursors(['']);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [searchInputValue]);
+      setDebouncedSearchQuery(searchQuery);
+    }, 400);
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
-
-  // Pagination states
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageCursors, setPageCursors] = useState<string[]>(['']);
-  const limit = 10;
-
-  // Fetch products from backend when category, page, search query, or priceRange changes
-  useEffect(() => {
-    if (!user) return;
-    const fetchProducts = async () => {
-      setLoadingProducts(true);
-      setProductError(null);
-      try {
-        const cursor = page === 1 ? '' : (pageCursors[page - 1] || '');
-        let url = `/products?limit=${limit}`;
-
-        if (selectedCategory !== 'all') {
-          url += `&category=${selectedCategory}`;
-        }
-
-        if (cursor && cursor.trim() !== '') {
-          url += `&cursor=${cursor}`;
-        }
-
-        if (searchQuery.trim() !== '') {
-          url += `&search=${encodeURIComponent(searchQuery.trim())}`;
-        }
-
-        // Add price limits
-        url += `&minPrice=100&maxPrice=${priceRange}`;
-
-        const res = await fetchWithAuth(url);
-        if (!res.ok) throw new Error('Failed to load products');
-        const data = await res.json();
-        setProducts(data.products || []);
-        setTotalCount(data.totalCount || 0);
-        setTotalPages(data.totalPages || 1);
-        if (data.pageCursors) {
-          setPageCursors(data.pageCursors);
-        }
-      } catch (err: any) {
-        console.error(err);
-        setProductError(err.message || 'Failed to fetch products');
-      } finally {
-        setLoadingProducts(false);
-      }
+    return () => {
+      clearTimeout(timer);
     };
-    fetchProducts();
-  }, [user, selectedCategory, page, searchQuery, priceRange]);
+  }, [searchQuery]);
 
-  // Protect the route
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[var(--bg-app)]">
-        <div className="w-6 h-6 border-2 border-[var(--primary-glow)] border-t-[var(--primary)] rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Fetch filtered todos directly from Database via API
+  const fetchFilteredTodos = useCallback(async () => {
+    try {
+      const response = await api.get('/todos', {
+        params: {
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+          category: categoryFilter !== 'all' ? categoryFilter : undefined,
+          search: debouncedSearchQuery.trim() !== '' ? debouncedSearchQuery.trim() : undefined,
+        },
+      });
+      setTodos(response.data);
+    } catch (err) {
+      toast.error('Failed to load tasks');
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, priorityFilter, categoryFilter, debouncedSearchQuery]);
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  // Fetch all todos for global dashboard statistics
+  const fetchAllTodos = async () => {
+    try {
+      const response = await api.get('/todos');
+      setAllTodos(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const categories = ['all', 'beauty', 'fragrances'];
+  const refreshData = () => {
+    fetchFilteredTodos();
+    fetchAllTodos();
+  };
 
-  const filteredProducts = products;
+  useEffect(() => {
+    refreshData();
+  }, [fetchFilteredTodos]);
+
+  const handleCreateOrUpdate = async (data: CreateTodoInput | UpdateTodoInput) => {
+    try {
+      if (editingTodo) {
+        await api.patch(`/todos/${editingTodo.id}`, data);
+        toast.success('Task updated successfully');
+      } else {
+        await api.post('/todos', data);
+        toast.success('Task created successfully');
+      }
+      refreshData();
+    } catch (err) {
+      toast.error('Operation failed');
+    }
+  };
+
+  const handleToggle = async (id: number) => {
+    try {
+      await api.patch(`/todos/${id}/toggle`);
+      refreshData();
+    } catch (err) {
+      toast.error('Failed to update status');
+    }
+  };
+
+  const handleStatusChange = async (id: number, status: TodoStatus) => {
+    try {
+      await api.patch(`/todos/${id}`, { status });
+      toast.success(`Task status updated to ${status.replace('_', ' ')}`);
+      refreshData();
+    } catch (err) {
+      toast.error('Failed to update status');
+    }
+  };
+
+  // Open custom Delete Confirmation Modal
+  const handleDeleteRequest = (id: number) => {
+    const found = allTodos.find((t) => t.id === id) || todos.find((t) => t.id === id);
+    if (found) {
+      setDeletingTodo(found);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingTodo) return;
+    setDeletingLoading(true);
+    try {
+      await api.delete(`/todos/${deletingTodo.id}`);
+      toast.success('Task deleted');
+      setIsDeleteModalOpen(false);
+      setDeletingTodo(null);
+      refreshData();
+    } catch (err) {
+      toast.error('Failed to delete task');
+    } finally {
+      setDeletingLoading(false);
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    setEditingTodo(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (todo: Todo) => {
+    setEditingTodo(todo);
+    setIsModalOpen(true);
+  };
+
+  // Date Calculations for Welcome Banner, Overdue, and Due Today
+  const todayDateObj = new Date();
+  const todayFormatted = todayDateObj.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const todayYYYYMMDD = todayDateObj.toISOString().split('T')[0];
+
+  const overdueTasks = allTodos.filter(
+    (t) => t.status !== 'completed' && t.dueDate && t.dueDate < todayYYYYMMDD
+  );
+
+  const dueTodayTasks = allTodos.filter(
+    (t) => t.status !== 'completed' && t.dueDate && t.dueDate === todayYYYYMMDD
+  );
+
+  const visibleOverdueTasks = showAllOverdue ? overdueTasks : overdueTasks.slice(0, 3);
+  const visibleDueTodayTasks = showAllDueToday ? dueTodayTasks : dueTodayTasks.slice(0, 3);
+
+  const formatShortDueDate = (dueDateStr?: string) => {
+    if (!dueDateStr) return '';
+    const d = new Date(dueDateStr);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  };
 
   return (
-    <StoreLayout pageTitle="E-Commerce" activeTab="dashboard">
-      <div className="p-6 text-[var(--text-main)] space-y-6">
-        {/* Store Hero Banner */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-gradient-to-r from-teal-500/10 to-teal-500/5 border border-[var(--border-color)] rounded-xl gap-4">
+    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col pb-12">
+      <Navbar />
+
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800/90 to-slate-900 border border-slate-800 rounded-3xl p-6 mb-8 shadow-xl backdrop-blur-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--primary)] mb-1">Welcome {user.name}!</h1>
-            <p className="text-xs text-[var(--text-muted)] max-w-xl">
-              Discover our exclusive catalog of products. Browse by category, search for items, and enjoy our premium membership perks.
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+              👋 Welcome, {user?.name || 'User'}
+            </h1>
+            <p className="text-sm text-slate-300 mt-2 font-semibold">
+              Today: {todayFormatted}
+            </p>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1 font-medium flex items-center gap-1.5">
+              <span className="inline-block w-2 h-2 rounded-full bg-teal-400 animate-pulse shrink-0"></span>
+              <span>
+                {overdueTasks.length > 0 || dueTodayTasks.length > 0 ? (
+                  <>
+                    You have <span className="font-bold text-rose-400">{overdueTasks.length} overdue task{overdueTasks.length === 1 ? '' : 's'}</span> and <span className="font-bold text-amber-400">{dueTodayTasks.length} task{dueTodayTasks.length === 1 ? '' : 's'} due today</span>.
+                  </>
+                ) : (
+                  <>You have no overdue tasks and no tasks due today. All caught up!</>
+                )}
+              </span>
             </p>
           </div>
-          <div className="flex items-center gap-4 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-3 rounded-lg shadow-sm">
-            <span className="text-2xl font-bold text-[var(--primary)]">{totalCount}</span>
-            <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-semibold">Products</span>
-          </div>
+
+          <button
+            onClick={handleOpenCreateModal}
+            className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-300 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 transition-all hover:scale-[1.02] shrink-0"
+          >
+            <FiPlus className="w-5 h-5 stroke-[2.5]" />
+            <span>New Task</span>
+          </button>
         </div>
 
-        {/* Catalog Controls */}
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-3 items-center">
-            <div className="relative max-w-xs w-full">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                className="w-full pl-10 pr-4 py-2 text-xs rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-main)] outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-glow)] transition-all"
-                placeholder="Search products..."
-                value={searchInputValue}
-                onChange={(e) => setSearchInputValue(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <button
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-md border text-xs font-semibold cursor-pointer transition-all h-[38px] ${isFilterOpen
-                  ? 'bg-[var(--primary)] text-slate-900 border-[var(--primary)]'
-                  : 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border-color)] hover:border-[var(--primary)]'
-                  }`}
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-              >
-                <FaFilter size={12} />
-                <span>Filter</span>
-              </button>
+        {/* Global Task Statistics Cards */}
+        <TodoStats todos={allTodos} />
 
-              {/* Popover Filter Panel */}
-              {isFilterOpen && (
-                <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 flex flex-col gap-4 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  {/* Popover Header & Close Button */}
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-[var(--text-heading)] text-sm">Filter Catalog</span>
-                    <button
-                      onClick={() => setIsFilterOpen(false)}
-                      className="text-[var(--text-muted)] hover:text-[var(--text-main)] text-xl cursor-pointer"
-                    >
-                      &times;
-                    </button>
-                  </div>
-
-                  {/* Category List */}
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Category Filter</h4>
-                    <div className="flex gap-2 flex-wrap">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat}
-                          className={`px-3 py-1 rounded-full text-[10px] font-semibold border capitalize cursor-pointer transition-all ${tempCategory === cat
-                            ? 'bg-[var(--primary)] text-slate-900 border-[var(--primary)]'
-                            : 'bg-[var(--bg-app)] text-[var(--text-main)] border-[var(--border-color)] hover:border-[var(--primary)]'
-                            }`}
-                          onClick={() => setTempCategory(cat)}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Price Slider */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Price Range</h4>
-                      <span className="text-xs font-bold text-[var(--primary)]">₹100 - ₹{tempPriceRange}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] text-[var(--text-muted)]">₹100</span>
-                      <input
-                        type="range"
-                        min="100"
-                        max="100000"
-                        step="50"
-                        value={tempPriceRange}
-                        onChange={(e) => setTempPriceRange(Number(e.target.value))}
-                        className="flex-1 accent-[var(--primary)] cursor-pointer h-1.5 rounded-lg bg-[var(--border-color)] outline-none"
-                      />
-                      <span className="text-[10px] text-[var(--text-muted)]">₹1L+</span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 justify-end mt-2">
-                    <button
-                      onClick={() => {
-                        setTempCategory('all');
-                        setTempPriceRange(100000);
-                        setSelectedCategory('all');
-                        setPriceRange(100000);
-                        setPage(1);
-                        setPageCursors(['']);
-                        setIsFilterOpen(false);
-                      }}
-                      className="px-4 py-2 border border-[var(--border-color)] hover:bg-white/5 rounded-md text-[10px] font-semibold text-[var(--text-main)] cursor-pointer transition-all"
-                    >
-                      Reset
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory(tempCategory);
-                        setPriceRange(tempPriceRange);
-                        setPage(1);
-                        setPageCursors(['']);
-                        setIsFilterOpen(false);
-                      }}
-                      className="px-4 py-2 bg-[var(--primary)] text-slate-900 hover:opacity-90 active:scale-95 rounded-md text-[10px] font-semibold cursor-pointer transition-all"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
+        {/* 🔴 Overdue Tasks Section */}
+        {overdueTasks.length > 0 && (
+          <div className="bg-rose-950/20 border border-rose-500/30 rounded-3xl p-6 mb-8 backdrop-blur-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-rose-400 flex items-center gap-2">
+                <FiAlertTriangle className="text-rose-400 animate-bounce" />
+                Overdue Tasks ({overdueTasks.length})
+              </h2>
+              {overdueTasks.length > 3 && (
+                <button
+                  onClick={() => setShowAllOverdue(!showAllOverdue)}
+                  className="text-xs font-semibold text-rose-400 hover:text-rose-300 underline transition-colors"
+                >
+                  {showAllOverdue ? '[Show Less]' : `[View All Overdue (${overdueTasks.length})]`}
+                </button>
               )}
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {visibleOverdueTasks.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => handleOpenEditModal(t)}
+                  className="bg-slate-900/80 border border-rose-500/30 hover:border-rose-500/60 rounded-2xl p-4 flex justify-between items-center gap-3 shadow-md hover:shadow-rose-500/10 cursor-pointer transition-all group"
+                  title="Click to edit task"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-100 flex items-center gap-1.5 truncate group-hover:text-rose-300 transition-colors">
+                      ⚠️ {t.title}
+                    </p>
+                    <p className="text-xs text-rose-400 font-semibold mt-1">
+                      Due: {formatShortDueDate(t.dueDate)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEditModal(t);
+                    }}
+                    className="text-xs bg-slate-800 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap capitalize flex items-center gap-1.5"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                    {t.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 📅 Due Today Section */}
+        {dueTodayTasks.length > 0 && (
+          <div className="bg-amber-950/20 border border-amber-500/30 rounded-3xl p-6 mb-8 backdrop-blur-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2">
+                <FiClock className="text-amber-400" />
+                Due Today ({dueTodayTasks.length})
+              </h2>
+              {dueTodayTasks.length > 3 && (
+                <button
+                  onClick={() => setShowAllDueToday(!showAllDueToday)}
+                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 underline transition-colors"
+                >
+                  {showAllDueToday ? '[Show Less]' : `[View All Due Today (${dueTodayTasks.length})]`}
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {visibleDueTodayTasks.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => handleOpenEditModal(t)}
+                  className="bg-slate-900/80 border border-amber-500/30 hover:border-amber-500/60 rounded-2xl p-4 flex justify-between items-center gap-3 shadow-md hover:shadow-amber-500/10 cursor-pointer transition-all group"
+                  title="Click to edit task"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-100 flex items-center gap-1.5 truncate group-hover:text-amber-300 transition-colors">
+                      📌 {t.title}
+                    </p>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-block mt-1">
+                      Due Today
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEditModal(t);
+                    }}
+                    className="text-xs bg-slate-800 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-500/40 text-slate-300 hover:text-amber-200 px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap capitalize flex items-center gap-1.5"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    {t.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Section Title for Rest of Tasks */}
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+            Task Management & Filters
+          </h2>
+        </div>
+
+        {/* Filter and Search Bar with Category Filter & Debounce */}
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 mb-6 backdrop-blur-md flex flex-col lg:flex-row gap-4 justify-between items-center">
+          <div className="relative w-full lg:w-72">
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-800/80 border border-slate-700/60 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div className="flex items-center space-x-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+              <FiFilter className="text-teal-400 w-3.5 h-3.5" />
+              <span>Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-transparent text-slate-100 focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="all" className="bg-slate-900">All</option>
+                <option value="pending" className="bg-slate-900">Pending</option>
+                <option value="in_progress" className="bg-slate-900">In Progress</option>
+                <option value="completed" className="bg-slate-900">Completed</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+              <span>Priority:</span>
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="bg-transparent text-slate-100 focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="all" className="bg-slate-900">All</option>
+                <option value="high" className="bg-slate-900">High</option>
+                <option value="medium" className="bg-slate-900">Medium</option>
+                <option value="low" className="bg-slate-900">Low</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2 bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+              <FiTag className="text-purple-400 w-3.5 h-3.5" />
+              <span>Category:</span>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-transparent text-slate-100 focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="all" className="bg-slate-900">All</option>
+                <option value="personal" className="bg-slate-900">Personal</option>
+                <option value="work" className="bg-slate-900">Work</option>
+                <option value="study" className="bg-slate-900">Study</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Products Display */}
-        {loadingProducts ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <div key={index} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl overflow-hidden animate-pulse flex flex-col h-full">
-                <div className="aspect-square bg-white/5" />
-                <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="h-3 bg-white/10 rounded w-1/3" />
-                    <div className="h-4 bg-white/15 rounded w-3/4" />
-                    <div className="h-3 bg-white/10 rounded w-1/2" />
-                  </div>
-                  <div className="h-8 bg-white/10 rounded w-full mt-2" />
-                </div>
-              </div>
-            ))}
+        {/* Todo Grid / List */}
+        {loading ? (
+          <div className="py-20 text-center text-slate-500">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400 mb-3" />
+            <p className="text-sm">Loading tasks from database...</p>
           </div>
-        ) : productError ? (
-          <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-xs">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>{productError}</span>
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center text-[var(--text-muted)] space-y-3">
-            <svg className="w-12 h-12 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 className="font-semibold text-base text-[var(--text-heading)]">No Products Found</h3>
-            <p className="text-xs">Try adjusting your search query or filters.</p>
+        ) : todos.length === 0 ? (
+          <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center my-8">
+            <FiInbox className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-slate-300">No tasks found</h3>
+            <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+              {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all'
+                ? 'No matching tasks found in database for the selected filters.'
+                : 'Get started by creating your first task!'}
+            </p>
+            {!searchQuery && statusFilter === 'all' && priorityFilter === 'all' && categoryFilter === 'all' && (
+              <button
+                onClick={handleOpenCreateModal}
+                className="mt-4 inline-flex items-center space-x-2 px-4 py-2 bg-teal-500/10 text-teal-400 border border-teal-500/30 rounded-xl text-sm font-semibold hover:bg-teal-500/20 transition-all"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span>Create Task</span>
+              </button>
+            )}
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {filteredProducts.map((product) => {
-                const discountAmt = product.discountPercentage || 0;
-                const originalPrice = (product.price / (1 - discountAmt / 100)).toFixed(2);
-                const isWishlisted = isInWishlist(product.id);
-
-                return (
-                  <div
-                    key={product.id}
-                    className="group relative bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--primary)] rounded-xl overflow-hidden flex flex-col h-full transition-all duration-300 ease-out cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-[var(--primary)]/10 hover:scale-105 hover:-translate-y-1.5"
-                    onClick={() => navigate(`/dashboard/${product.id}`)}
-                  >
-                    {/* Wishlist Heart — visible in both light and dark themes */}
-                    <button
-                      className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 flex items-center justify-center rounded-full border-2 transition-all cursor-pointer hover:scale-110 shadow-sm ${isWishlisted
-                        ? 'bg-red-50 border-red-400 text-red-500'
-                        : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-muted)] hover:border-red-400 hover:text-red-400'
-                        }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleWishlist(product);
-                      }}
-                      title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                    >
-                      <svg width="15" height="15" fill={isWishlisted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </button>
-
-
-
-                    <div className="aspect-square bg-white/2 flex items-center justify-center p-4 border-b border-[var(--border-color)] overflow-hidden">
-                      <img
-                        src={product.thumbnail}
-                        alt={product.title}
-                        className="object-contain w-full h-full max-h-48 group-hover:scale-105 transition-all duration-300 ease-out"
-                        loading="lazy"
-                      />
-                    </div>
-
-                    <div className="p-4 flex-1 flex flex-col gap-2">
-                      {/* Brand */}
-                      <span className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider truncate">
-                        {product.brand || 'Generic'}
-                      </span>
-
-                      {/* Product Title */}
-                      <h4 className="font-bold text-base text-[var(--text-heading)] line-clamp-2 group-hover:text-[var(--primary)] transition-all leading-snug" title={product.title}>
-                        {product.title}
-                      </h4>
-
-                      {/* Offer — red highlighted description line (only if offer exists) */}
-                      {product.offer && (
-                        <p className="text-sm font-semibold text-red-500 bg-red-500/8 border border-red-500/20 rounded px-2 py-1 line-clamp-1">
-                          🏷️ {product.offer}
-                        </p>
-                      )}
-
-                      {/* Discount % inline with price row */}
-                      {discountAmt > 0 && (
-                        <span className="text-sm font-bold text-red-500">{Math.round(discountAmt)}% OFF</span>
-                      )}
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <svg className="text-amber-500 w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span className="font-semibold text-[var(--text-main)]">{product.rating}</span>
-                        <span className="text-[var(--text-muted)]">({Math.floor((product.id * 17) % 150) + 12})</span>
-                      </div>
-
-                      {/* Price row */}
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-extrabold text-[var(--primary)]">₹{product.price.toFixed(2)}</span>
-                        {discountAmt > 0 && (
-                          <span className="text-sm text-[var(--text-muted)] line-through">₹{originalPrice}</span>
-                        )}
-                      </div>
-
-                      {/* Stock */}
-                      <span className={`text-sm font-semibold ${product.stock === 0 ? 'text-red-500' : product.stock < 10 ? 'text-amber-500' : 'text-emerald-500'}`}>
-                        {product.stock === 0 ? 'Out of stock' : product.stock < 10 ? `Only ${product.stock} left!` : 'In stock'}
-                      </span>
-                    </div>
-
-                    <div className="p-3 border-t border-[var(--border-color)] mt-auto">
-                      <button
-                        className="w-full flex items-center justify-center gap-2 bg-[var(--primary)] hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-slate-900 font-bold py-3 rounded-lg text-sm cursor-pointer transition-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(product);
-                        }}
-                        disabled={product.stock === 0}
-                      >
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {totalPages > 1 && (() => {
-              const groupIndex = Math.floor((page - 1) / 3);
-              const startPage = groupIndex * 3 + 1;
-              const endPage = Math.min(totalPages, startPage + 2);
-              const visiblePages = [];
-              for (let i = startPage; i <= endPage; i++) {
-                visiblePages.push(i);
-              }
-              return (
-                <div className="flex justify-center items-center gap-1.5 mt-8">
-                  <button
-                    className="px-3 py-1.5 bg-[var(--bg-card)] border border-[var(--border-color)] text-xs rounded-md font-medium text-[var(--text-main)] hover:border-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    Prev
-                  </button>
-                  {visiblePages.map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      className={`px-3.5 py-1.5 text-xs rounded-md font-semibold border transition-all cursor-pointer ${page === pageNum
-                        ? 'bg-[var(--primary)] text-slate-900 border-[var(--primary)]'
-                        : 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border-color)] hover:border-[var(--primary)]'
-                        }`}
-                      onClick={() => setPage(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
-                  <button
-                    className="px-3 py-1.5 bg-[var(--bg-card)] border border-[var(--border-color)] text-xs rounded-md font-medium text-[var(--text-main)] hover:border-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Next
-                  </button>
-                </div>
-              );
-            })()}
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {todos.map((todo) => (
+              <TodoCard
+                key={todo.id}
+                todo={todo}
+                onToggle={handleToggle}
+                onEdit={handleOpenEditModal}
+                onDelete={handleDeleteRequest}
+                onStatusChange={handleStatusChange}
+              />
+            ))}
+          </div>
         )}
-      </div>
-    </StoreLayout>
+      </main>
+
+      <TodoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateOrUpdate}
+        initialData={editingTodo}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingTodo(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        taskTitle={deletingTodo?.title || ''}
+        loading={deletingLoading}
+      />
+    </div>
   );
 };
-

@@ -25,21 +25,17 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
 
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-
   --sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* ── Light Theme Overrides ─────────────────────────────────────────────────── */
+/* ── Light Theme Design Overrides ─────────────────────────────────────────── */
 .light-theme {
   --bg-app: #f8fafc;
   --bg-card: #ffffff;
   --bg-sidebar: #f1f5f9;
 
-  --text-main: #334155;
+  --text-main: #1e293b;
   --text-muted: #64748b;
   --text-light: #475569;
   --text-heading: #0f172a;
@@ -47,9 +43,117 @@
   --border-color: #e2e8f0;
   --border-sidebar: #cbd5e1;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  color-scheme: light;
+}
+
+/* Force body and root background in light mode */
+.light-theme body,
+.light-theme #root,
+.light-theme .min-h-screen {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}
+
+/* Header & Navigation Bar in Light Mode */
+.light-theme header,
+.light-theme .bg-\[\#0f172a\]\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.light-theme header span,
+.light-theme header h1,
+.light-theme header a {
+  color: #090d16 !important;
+}
+
+.light-theme header .bg-teal-500\/20,
+.light-theme header .text-slate-950 {
+  background-color: #ccfbf1 !important;
+  color: #090d16 !important;
+  border-color: #0d9488 !important;
+  font-weight: 800 !important;
+}
+
+.light-theme header svg {
+  color: #090d16 !important;
+}
+
+/* Cards, Modals & Container Boxes in Light Mode */
+.light-theme .bg-slate-900,
+.light-theme .bg-slate-900\/40,
+.light-theme .bg-slate-900\/60,
+.light-theme .bg-slate-900\/70,
+.light-theme .bg-slate-900\/80,
+.light-theme .bg-slate-950,
+.light-theme .bg-slate-950\/60,
+.light-theme .bg-slate-950\/80 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light-theme .bg-slate-800,
+.light-theme .bg-slate-800\/40,
+.light-theme .bg-slate-800\/50,
+.light-theme .bg-slate-800\/60,
+.light-theme .bg-slate-800\/80 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Inputs, Textareas, Selects in Light Mode */
+.light-theme input,
+.light-theme select,
+.light-theme textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light-theme select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Typography & Headings in Light Mode */
+.light-theme .text-white,
+.light-theme .text-slate-100,
+.light-theme .text-slate-200 {
+  color: #0f172a !important;
+}
+
+.light-theme .text-slate-300,
+.light-theme .text-slate-400 {
+  color: #475569 !important;
+}
+
+.light-theme .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* High contrast teal text & badges in Light Mode */
+.light-theme .text-teal-400,
+.light-theme .text-teal-300 {
+  color: #0f766e !important;
+}
+
+/* Banner Gradients in Light Mode */
+.light-theme .bg-gradient-to-r.from-slate-900 {
+  background: linear-gradient(to right, #f1f5f9, #ffffff, #f1f5f9) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Overdue & Due Today Banner Overrides */
+.light-theme .bg-rose-950\/20 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+
+.light-theme .bg-amber-950\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fef3c7 !important;
 }
 
 /* ── Base styles inside @layer base so they override Tailwind Preflight ───── */
